@@ -1,0 +1,123 @@
+\documentclass[11pt]{article}
+
+\usepackage{enumitem}
+\usepackage{fullpage}
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+
+\usepackage{tikz}
+
+\usepackage[bookmarks=true,hypertexnames=false]{hyperref} % hypertexnames=false is more robust
+\hypersetup{colorlinks=true, linkcolor=red, urlcolor=blue}
+
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} % replace ``Require:'' with ``Input:'', see http://tipstrickshowtos.blogspot.com/2010/11/replace-require-and-ensure-with-input.html
+\renewcommand{\algorithmicensure}{\textbf{Output:}} % replace ``Ensure:'' with ``Output:'', see http://tipstrickshowtos.blogspot.com/2010/11/replace-require-and-ensure-with-input.html
+
+\usepackage{fixltx2e} % defines \MakeRobust (which is used on the next line)
+\MakeRobust{\Call}    % allows nested calls, see http://tex.stackexchange.com/questions/16046/how-to-nest-call-in-algorithmicx
+
+\newcommand{\probspec}[2]{%
+  \smallskip
+  \par\noindent
+  {\bf Input:} #1
+  \smallskip
+  \par\noindent
+  {\bf Output:} #2
+  \par\smallskip%
+}
+
+\begin{document}
+
+
+\noindent
+\fbox{
+  \begin{minipage}{0.97\textwidth}
+    \textbf{CS 577: Introduction to Algorithms}
+    \hfill
+    Fall 2020
+    \begin{center}
+      {\Large How to Develop a Dynamic Programming Algorithm}
+    \end{center}
+    Instructor: Dieter van Melkebeek
+    \hfill
+    TA: Ryan Moreno
+  \end{minipage}
+}
+
+\bigskip
+\medskip
+
+\noindent
+These are general comments observed during the mock grading of HW3 \#3.
+
+
+\begin{itemize}
+  \item The most widespread issue was lack of good definition of
+    subproblems. This is distinct from giving a recurrence.
+    We want to see something like ``\(OPT(i)\) is the smallest height of
+    a bookshelf required to stack the first \(i\) books'' before any
+    pseudocode or recurrences.
+
+  \item In general, follow the suggested format for DP submissions. It's
+    there to help structure your thinking. It is copied from Piazza
+    below.
+
+  \item A number of submissions had correct, but too-slow, recursive
+    ideas. Not all recursive ideas give optimal algorithms. Be honest
+    with your running time analysis, and if it is too slow, try another
+    approach. If you run out of time, describe the best algorithm you
+    came up with, and analyze it honestly. You'll get partial credit for
+    the algorithm, and full credit for the running time analysis
+    provided it is honest and nontrivial.
+
+  \item Proofs of correctness were more present than previous homeworks.
+    When there were issues, it could almost always be traced back to
+    unclear problem specifications. Always provide a clear stand-alone
+    specification of sub-problems!
+
+  \item Running time analyses were typically good, but a common mistake
+    came down to treating \(w = O(1)\). That is not correct.
+
+\end{itemize}
+
+
+\subsection*{Suggested format for DP submissions}
+\begin{enumerate}
+  \item Describe the intuition/key idea.
+  \item Clearly define the subproblems. 
+  \item Derive a recursion for solving the subproblems.
+  \item Describe how to organize the computation and obtain the final result.
+  \item Analyze the run time and/or the space usage.
+\end{enumerate}
+
+Step 2 essentially is a problem specification: It describes the input
+(each dimension of the DP table), and what the meaning of the
+corresponding entry in the DP table is. Like with all specifications,
+the output (meaning of the entry in the DP table) describes *what* it
+is, not how it is computed. This step if often the mosts critical one as
+it captures the key insight into the structure of the subproblems that
+arise.
+
+Step 3 involves a recursion (including base cases) and an argument why
+it holds. This step often overlaps with Step 1. Sometimes the argument
+is already implicit in Step 1. To be sure, it's often best to describe
+the argument in full rather than refer to Step 1.
+
+Step 4 explains in what order the entries in the DP table are computed,
+and how you extract the final answer (the optimal value and/or a way to
+realize it).
+
+Step 5 often boils down to counting the number of entries in the table,
+and multiplying that number by the local amount of work spent in
+computing an entry in the table. 
+
+\end{document}
+
+
