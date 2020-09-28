@@ -9,6 +9,8 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{mathrsfs}
+\usepackage{caption}
+\usepackage{titlesec}
 
 \usepackage{tikz}
 
@@ -33,8 +35,17 @@
   \par\smallskip%
 }
 
-\begin{document}
+\DeclareRobustCommand{\bigO}{%
+    O
+%   \text{\usefont{OMS}{cmsy}{m}{n}O}%
+}
 
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+\titlespacing\section{0pt}{15pt plus 2pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{10pt plus 2pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+\begin{document}
 
 \noindent
 \fbox{
@@ -54,69 +65,201 @@
 \bigskip
 \medskip
 
-\noindent
-These are general comments observed during the mock grading of HW3 \#3.
+This handout is meant to provide a basic structure to the problem solving and write-up steps for dynamic programming. Please note that these are not required patterns; they are merely suggestions. Any solution that is clear, correct, sufficiently efficient, and analyzed properly (correctness and complexity) will get full credit. However, if you are stuck on a problem, going through the steps outlined below can be helpful.
 
-
-\begin{itemize}
-  \item The most widespread issue was lack of good definition of
-    subproblems. This is distinct from giving a recurrence.
-    We want to see something like ``\(OPT(i)\) is the smallest height of
-    a bookshelf required to stack the first \(i\) books'' before any
-    pseudocode or recurrences.
-
-  \item In general, follow the suggested format for DP submissions. It's
-    there to help structure your thinking. It is copied from Piazza
-    below.
-
-  \item A number of submissions had correct, but too-slow, recursive
-    ideas. Not all recursive ideas give optimal algorithms. Be honest
-    with your running time analysis, and if it is too slow, try another
-    approach. If you run out of time, describe the best algorithm you
-    came up with, and analyze it honestly. You'll get partial credit for
-    the algorithm, and full credit for the running time analysis
-    provided it is honest and nontrivial.
-
-  \item Proofs of correctness were more present than previous homeworks.
-    When there were issues, it could almost always be traced back to
-    unclear problem specifications. Always provide a clear stand-alone
-    specification of sub-problems!
-
-  \item Running time analyses were typically good, but a common mistake
-    came down to treating \(w = O(1)\). That is not correct.
-
-\end{itemize}
-
-
-\subsection*{Suggested format for DP submissions}
+\section*{Suggested Write-Up Format}
 \begin{enumerate}
-  \item Describe the intuition/key idea.
-  \item Clearly define the subproblems. 
-  \item Derive a recursion for solving the subproblems.
-  \item Describe how to organize the computation and obtain the final result.
-  \item Analyze the run time and/or the space usage.
+    \item Clearly define the sub-problems. This is often the bottleneck in the algorithm development. See section~\ref{sec:definesubproblems} for tips.
+    \item Clearly state a recurrence for solving the sub-problems.
+    \item Explain the intuition and key ideas behind your recurrence. We should understand your basic approach without having to reverse-engineer your recurrence.
+    \item Analyze the correctness of your recurrence and base cases. This doesn't need to be a formal inductive proof, but needs to include the key ideas that would have been in a formal inductive step.
+    \item Describe how to organize the computation and obtain the final result (using either recursion \& memoization or an iterative approach).
+    \item Analyze the time and space complexity of your algorithm.
 \end{enumerate}
 
-Step 2 essentially is a problem specification: It describes the input
-(each dimension of the DP table), and what the meaning of the
-corresponding entry in the DP table is. Like with all specifications,
-the output (meaning of the entry in the DP table) describes *what* it
-is, not how it is computed. This step if often the mosts critical one as
-it captures the key insight into the structure of the subproblems that
-arise.
+\section*{Overview}
+Dynamic Programming is useful in making recursive algorithms with over-lapping sub-problems more efficient. Such recursive algorithms often make the same calls multiple times, wasting resources. Dynamic Programming takes a problem that is recursive in nature, minimizes the number of unique recursive calls, and stores the solutions to smaller versions of the problem along the way, eliminating the waste of recalculating these values. In this handout, I'll provide generic steps to create a DP solution. For each step, I'll give an example of how it would look for the Coin Problem, stated below.
 
-Step 3 involves a recursion (including base cases) and an argument why
-it holds. This step often overlaps with Step 1. Sometimes the argument
-is already implicit in Step 1. To be sure, it's often best to describe
-the argument in full rather than refer to Step 1.
+\section*{Coin Problem}
+Given a set of $k$ of positive, integer coin values $C = \{c_1 = 1, c_2, c_3 ... c_k\}$, and a non-negative integer target value $T$, what is the minimum number of coins needed to sum to the target value? What are the coins used in the optimal solution? Multiple coins of a given coin value $c_j$ can be used. Write an algorithm to answer this question efficiently. Note that there is always a way to sum to $T$ since a coin with value $1$ is always provided. 
 
-Step 4 explains in what order the entries in the DP table are computed,
-and how you extract the final answer (the optimal value and/or a way to
-realize it).
+For example, given the coins $C = \{1, 5, 8\}$ and the target value $T = 15$, the optimal solution requires three coins, specifically using three $5$s.
 
-Step 5 often boils down to counting the number of entries in the table,
-and multiplying that number by the local amount of work spent in
-computing an entry in the table. 
+\section{Getting Intuition}
+\subsection*{State your goal}
+When getting intuition for a problem, I like to start with restating the goal of the algorithm. Writing this out explicitly can be helpful in coming up with a recurrence as well as understanding how your final answer is found. We will start by only considering the optimization question (what is the minimum number of coins), leaving retrieving the solution path (what coins did we use in the solution) for later. In the case of the optimization question, the goal is to return the minimum number of coins that sum to $T$.
+
+\subsection*{First Choice/Question}
+Setting aside algorithms for a minute, as a human what is the first choice you would make if you were trying to answer the question at hand? This will often give intuition about what your sub-problems should be. The first decision I would make in solving an instance of the Coin Problem is to choose some first coin to be included in my pile of coins that will sum to $T$. 
+
+\subsection*{Remaining Problem}
+After making that first decision, what do you still need to know in order to answer the original ``goal'' problem (what is the minimum number of coins that sum to $T$)? Assuming that I had chosen a coin of value $c_j$ as the first in my pile, the question that remains is the minimum number of coins necessary to sum to what remains of the target value, $T - c_j$.
+
+\section{Building a Recurrence}
+\subsection*{Defining the Sub-problems}
+\label{sec:definesubproblems}
+Now that we have built intuition for how to tackle the problem, let's define the sub-problems. This step is essentially a problem specification, describing the sub-problem's inputs and outputs. Defining the sub-problem is one of the key steps, and it can take some time. Your goal is to come up with a sub-problem definition such that the number of distinct sub-problems is small. For example, in the Interval Scheduling problem we saw in class, we sort the meeting time slots by start time. This minimizes the amount of information necessary to represent the state after some number of previous choices (whether to attend a meeting or not). Through this re-organization, our state only consists of the total value our previous choices accrued and the end time of the last meeting we chose to attend. This way, we only need sub-problems that consider the subsets of meetings starting after the end time of the last meeting we chose. In the Coin Problem, you might at first think that the state of the problem is the list of coins already chosen. However, we can reduce the size of this state by only remembering the total value of the coins we've chosen.
+
+If you're having trouble defining your sub-problem's inputs, try thinking about it in another way. Thinking about what information needs to be passed into a recursive call solving the sub-problem is analogous to thinking about what information is necessary to represent the state of the problem after some number of decisions. Another tip if you get stuck is to start writing the recurrence relation until you realize that you need some piece of information, adding it as an input parameter.
+
+In the case of the Coin Problem, the minimum information we need to describe the current state of the problem after some number of coin choices is the value our previous choices sum to. Then, our remaining problem is to find the minimum number of coins that sum to what's left of our target value. Note that the coin values never change, so we don't need to pass this information. We will define our sub-problem $\mathrm{NumCoins}(i)$ as the minimum number of coins necessary to sum to some integer $i$. What's left of the target sum is exactly the input necessary for the recursive call solving the sub-problem. By subtracting $i$ from our original target value, you can also think of $i$ as providing the current state of the problem after some number of decisions (our current sum).
+
+
+
+\subsection*{Recurrence}
+Now that we have defined what the sub-problems \textit{mean} we need to describe \textit{how} to calculate their values. Our recurrence represents testing a decision about a small piece of the problem (\textit{i.e.}, the ``first choice'') and then combining that with the optimal solution for the rest of the problem (\textit{i.e.}, the ``remaining problem''). Don't forget to include the base case(s) as well! 
+
+In the Coin Problem, our decision is picking one coin to include in the sum. After we pick one coin, we can depend on the recursive function to decide the optimal solution for the remaining target value ($i - c_j$). The function then chooses to include whichever ``first'' coin results in the minimal number of coins needed to sum to the remaining target value. Our base case is that it takes $0$ coins to sum to a target value of $0$. The recurrence is as follows:
+
+\[
+    \mathrm{NumCoins}(i) = 
+\begin{cases}
+    \mathrm{min_\substack{1 \leq j \leq k, \\ i \geq c_j}} \{ 1+ \mathrm{NumCoins}(i - c_j) \},& \text{if } i\geq 1\\
+    0,              & \text{if } i=0
+\end{cases}
+\]
+
+\section{Correctness of Recurrence}
+At this point in the course, we assume that you understand how to write formal inductive proofs of correctness, and you are not expected to write one for your homework problems (or exam problems for that matter). However, you do need to explain the base cases and the key ideas of correctness that would have appeared in a formal proof's inductive step. 
+
+We only need to prove the correctness of our recurrence relation and base cases because the correctness of our recursive and/or iterative algorithms follow directly from the recurrence relation and base cases (as you will see in the next steps, the recursive and iterative algorithms are direct translations of the recurrence relation and base cases).
+
+Below is an informal correctness argument that would suffice for your homework. A formal inductive proof of correctness is included in the appendix~\ref{sec:correctness}.
+
+The above recurrence is based on breaking the coins that optimally sum to $i$ into two sets: the set containing one coin of any of the values $c_j$ and another set that contains the coins that optimally sum to what remains of the target value, $i - c_j$. So, for a given first coin of value $c_j$, the number of coins necessary to optimally sum to $i$ is $1$ $+$ the number of coins in the second set. Since we already defined $\mathrm{NumCoins}(i)$ to return the minimum number of coins needed to sum to the input value, we recursively call $\mathrm{NumCoins}(i - c_j)$ to compute the number of coins in the second set. $\mathrm{NumCoins}(i)$ then returns the minimum number of coins necessary considering all possible values for the ``first coin.'' Note that if $i < c_j$ the $\mathrm{min}$ subroutine will need to ignore option $j$ because the coin value is already larger than the target value, so we wouldn't use it in the sum. Our base case is that it takes $0$ coins to sum to a target value of $0$. We don't need to consider the case that it's impossible to sum to the target value because the problem states that our set of coin values always includes a coin of value $1$.
+
+\section{Algorithm}
+Next we need to describe how to execute the recurrence relation and base cases to achieve efficient running time. For details on the difference between a recursive approach using memoization and an iterative appoach, please see the appendix~\ref{sec:implementation}.
+\subsection*{Recursion \& Memoization}
+The most straightforward way to execute the recurrence is to simply use recursion with memoization. Recursion sometimes has the added benefit of being faster than its iterative counterpart because it can skip sub-problems that it doesn't use to calculate the top-level recursive call (whereas in the iterative strategy we calculate all sub-problems). To use recursion and memoization, we develop a recursive algorithm identical to the recurrence relation and base cases we defined earlier. We then rely on memoization to store solutions to sub-problems each time a recursive call is made so that the same recursive call is never executed more than once.
+
+In the case of the Coin Problem, it is enough to say that our recurrence can be executed recursively using memoization.
+
+\subsection*{Iterative Approach}
+Translating our recurrence into an iterative approach can help to understand how our answer is calculated efficiently. Furthermore, an iterative approach makes retrieving the solution path simpler and sometimes yields better space complexity because we may only need to keep track of a small portion of our storage array as we fill it in. The iterative approach will consist of creating an array to store solutions to our sub-problems and deciding what direction to fill the array in. 
+
+For clarity, we will change our notation from a recurrence $\mathrm{NumCoins}(i)$ that returns the minimum number of coins needed to sum to $i$ into an array $\mathrm{NumCoins}$ of size $T+1$ such that $\mathrm{NumCoins} \lbrack i \rbrack$ stores the minimum number of coins needed to sum to $i$. The recurrence we defined earlier be used to fill in this array.
+
+Next we need to consider what direction the array is filled in. When we fill in $\mathrm{NumCoins}\lbrack i \rbrack$, we need to have already calculated $\mathrm{NumCoins}\lbrack i - c_j \rbrack$. So, we will fill in the array from left to right so that the dependencies are available. The dependencies will always be available since our base case is $i=0$.
+
+I think that it's helpful to visualize the array. Since our recursive function only took one input, our array is 1D. For the sake of the diagram, consider the specific case where the set of possible coins is $C = \{1, 2, 4\}$. The arrows in the picture below represent which values we will look at when filling in $\mathrm{NumCoins}\lbrack i \rbrack$.
+
+\tikzset{every picture/.style={remember picture}}
+\begin{table}[h!]
+\begin{center}
+\caption*{NumCoins}
+\setlength{\tabcolsep}{14pt}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c|c|c| } 
+\hline
+ number of coins: & \textbf{0} & & & \tikz[baseline]{\node (i4) { };} & & \tikz[baseline]{\node (i2) { };} & \tikz[baseline]{\node (i1) { };} & \tikz[baseline]{\node (i) { };} & & \\
+ \hline
+index: & 0 & 1 & ... & i-4 & i-3 & i-2 & i-1 & i & ... & T \\
+ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{tikzpicture}[overlay]
+    \path[thick,->] (i) edge [bend right=35] (i1);
+    \path[thick,->] (i) edge [bend right=35] (i2);
+    \path[thick,->] (i) edge [bend right=35] (i4);
+\end{tikzpicture}
+
+\subsection*{Finding the Answer}
+Often, the answer to our ``goal'' question can be found using a specific recursive call (in the recursive approach) or can be found in a specific cell in the array (in the iterative approach). Other times, we might have to do some extra work to find the answer. For example, the answer could be the minimum value in our storage array in the iterative approach. If the location of the answer is not clear, it can help to compare the original ``goal'' question to the definition of the sub-problems.
+
+In the case of the Coin Problem, our original goal was to return the minimum number of coins that sum to $T$. Our recurrence $\mathrm{NumCoins}(i)$ is the minimum number of coins needed to sum to $i$. Through a simple substitution of the target value $T$ for $i$, we can see that the recursive call to $\mathrm{NumCoins}(T)$ (in the recursive approach) or the cell at $\mathrm{NumCoins} \lbrack T \rbrack $ will return the solution to the ``goal'' question, the minimum number of coins needed to sum to $T$.
+
+\section{Retrieving the Solution Path}
+In some problems, you will be asked not only to solve the optimization question (e.g. the minimum number of coins needed), but also to retrieve the path that led to the optimal answer (which coins were used). Sometimes solution retrieval will be faster if you use the iterative approach and store extra information along the way so that when you find your optimal solution you remember how you got there. 
+
+Other times, you will directly retrieve a solution without storing extra information. In fact, you can always retrieve a solution by tracing the recursive calls/array look-ups your algorithm made in reverse, seeing which choices it would have made at each step. We will see an example of this shortly. Notice that the way you retrieve the solution path can affect the overall run-time and space complexity of your solution.
+
+In the case of the Coin Problem, we could store extra information along the way, keeping a 2D array that includes a row for each coin value $c_j$, storing how many of the coins we used to reach a given sum of $i$. If $\mathrm{NumCoins}\lbrack i - c_j \rbrack$ was the minimum value when we calculated $\mathrm{NumCoins}\lbrack i \rbrack$, we would copy over the coins used to sum to $i - c_j$ and add one to the number of $c_j$ coins we used. By storing this extra information, we change the space complexity of the problem, requiring a 2D array of size  $(T+1) \cdot k$.
+
+However, we don't actually need to store the extra information. We can retrieve a solution path from the array we've already stored to answer the optimization question. Starting from $\mathrm{NumCoins}\lbrack T \rbrack$, we look back at the values in $\mathrm{NumCoins}\lbrack T - c_j \rbrack$ for all values of $c_j$. We know that our recurrence would have chosen the minimum of these values, so we record that we used one coin of value $c_j$ where $c_j$ was the coin that minimized the number of total coins needed (breaking ties arbitrarily). We then proceed to examine $\mathrm{NumCoins}\lbrack T - c_j \rbrack$ in the same way, checking what previous value we would have used. This process takes $\bigO(T \cdot k)$ time since we examine $k$ spots at each step backwards, and we could take at most $T$ steps backwards. 
+
+It turns out we can optimize our retrieval time complexity without significant change to our space complexity by storing one extra value per cell in the array. In addition to storing the number of coins used so far, we will store the value of the last coin used. Starting from $\mathrm{NumCoins}\lbrack T \rbrack$, we can record what coin value $c_j$ was last used. We then examine the index $(T - c_j)$ to see the second to last coin used, etc. This process takes $\bigO(T)$ time, which is an improvement from our last approach. However, since filling in the array took $\bigO(T \cdot k)$ time, both both of these two retrieval approaches result in the same asymptotic run-time of the overall algorithm.
+
+\section{Time and Space Complexity Analysis}
+\subsection*{Recursion \& Memoization Complexity}
+The time complexity for a recursive implementation can be calculated as (number of unique recursive calls) $\cdot$ (local time to compute a single recursive call) + (time for retrieving the solution path).
+
+In the context of the Coin Problem, there are $T+1$ unique inputs possible to our recurrence, so there are $\bigO(T)$ unique recursive calls. The local time to compute the recurrence is $\bigO(k)$ because we take the minimum over the $k$ values corresponding to $k$ different choices of the ``first'' coin. Retrieving the solution path takes $\bigO(n \cdot k)$ if we trace the recursive calls the algorithm made in reverse, seeing which choices it would have made at each step. This results in a time complexity of $\bigO(T \cdot k)$
+
+The space complexity is the size of the array used for memoization. In the case of the Coin Problem, this is $T+1$ which is $\bigO(T)$.
+
+\subsection*{Iterative Complexity}
+The time complexity for an iterative implementation can be calculated as (size of the array) $\cdot$ (time to calculate a single array cell) $+$ (time to find the answer in the array) $+$ (time to retrieve the solution path). In the Coin Problem, calculating an array cell takes $\bigO(k)$ (because the recurrence takes the minimum over $k$ values, each of which take $\bigO(1)$ time to look up in the array). The size of the array is $\bigO(T)$. Finding the answer takes one look-up in the array, which is $\bigO(1)$. As described earlier, the retrieval step takes $\bigO(T)$ or $\bigO(T \cdot k)$ depending on the implementation we use. So, the total time complexity is $\bigO(T \cdot k)$.
+
+The space complexity is the size of the array, which may include space to store extra information for retrieving the solution path. In the Coin Problem, the array is size $T+1$ (or $2(T+1)$ depending on how we implement the retrieval step), so the space complexity is $\bigO(T)$.
+
+\setcounter{section}{1}
+\renewcommand{\thesection}{\Alph{section}}
+\section*{Appendix}
+\subsection{Recursive vs Iterative Implementation}
+\label{sec:implementation}
+The difference between a recursive implementation (often called a ``top-down'' approach because we start with the top-level recursive call) and an iterative implementation (often called a ``bottom-up'' approach because we start by filling in the base cases and work our way up) is nuanced and all the more confusing because these terms are overloaded. All DP solutions are recursive in nature in the sense that they build upon optimal sub-solutions. The implementation itself can be either recursive or iterative in the programming sense of the words. If you follow the steps above, you first create a recurrence that answers the question at hand. Then, you translate this recurrence into either a recursive or iterative implementation. The iterative and recursive implementations are conceptually identical to the recurrence; in the iterative implementation, the formula to fill in a given spot in the storage array is the same formula the recurrence computes. 
+
+We often translate the problem into an iterative implementation for clarity; by examining the way the array is filled in, you can ensure that your base cases provide the dependencies to fill in the rest of the array. Also, the iterative implementation can be useful for saving space and for retrieiving the solution path. 
+
+That being said, translating your recursive function to an iterative implementation is not always necessary. If you prefer, you can call the recursive function top-down, relying on memoization to store the sub-solutions as you go. Furthermore, the recursive approach is sometimes faster than the iterative approach because it can skip recursive calls to sub-solutions that don't help calculate the top-level call. The recursion and memoization approach provides the same benefit of DP as using an iterative implementation: it takes a problem that is recursive in nature and stores the solutions to smaller versions of the problem along the way, eliminating the waste of recalculating these values.
+
+Memoization is an abstract concept in which the results of recursive calls are stored so that they are not computed more than once. Memoization can be implemented in many ways, using a variety of data structures. In fact, you can rely on the compiler for memoization and do not need to concern yourself with how it is implemented. However, as an illustrative example, one way to imagine memoization is having an array to store sub-solutions. Each time our recursive algorithm returns, we first store the result for the specific input $x$ in this array.  Before making a recursive call with input $y$, we check the array to see if this specific recursive call has already been made, returning the result stored in the array if it has. Note that the number of array cells used is the number of unique inputs passed into the recursive algorithm. Below is pseudo-code for a recursive implementation of the Coin Problem using this style of memoization. \\
+
+\begin{algorithm}[H]
+\begin{algorithmic} 
+\Function{CoinProblem}{$T,$ $C = \{c_1 = 1, c_2, c_3 ... c_k\})$}
+
+\State $\mathrm{StorageArray} \leftarrow$ empty array of size $T + 1$ \Comment{\parbox[t]{.4\linewidth}{stores minimum number of coins to sum to index}}
+\State {$\mathrm{StorageArray}\lbrack 0 \rbrack \leftarrow 0$}\Comment{base case}
+
+\Return $\mathrm{RecursiveHelper}(T)$ \Comment{top level recursive call will return the answer}
+
+\EndFunction \\
+
+\Function{RecursiveHelper}{$t$} \Comment{returns minimum number of coins to sum to $t$}
+	\If{$t < 0$} \Comment{invalid; target value too small} \\ 
+		\hskip\algorithmicindent \hskip\algorithmicindent \Return NULL
+	\EndIf
+	\If{$\mathrm{StorageArray}\lbrack t \rbrack \neq \mathrm{null}$} \Comment{already performed this calculation} \\
+		\hskip\algorithmicindent \hskip\algorithmicindent \Return $\mathrm{StorageArray}\lbrack t \rbrack$
+	\EndIf \\
+	\State $\mathrm{min} \leftarrow \infty$ \Comment{find the minimum previous case}
+	\For{$j \leftarrow 1$ \ldots $k$ }
+    	\If{$c_j \leq t$} \Comment{make sure coin value is not too large} 
+    	    \State $\mathrm{sub\_soln} \leftarrow \mathrm{RecursiveHelper}(t - c_j)$
+    		\If{$\mathrm{subSoln} \neq \mathrm{NULL}$ and $\mathrm{subSoln} < \mathrm{min}$}
+    			\State $\mathrm{min} \leftarrow \mathrm{subSoln}$
+    		\EndIf
+    	\EndIf
+	\EndFor \\
+	\State $\mathrm{StorageArray}\lbrack t \rbrack \leftarrow 1 + \mathrm{min}$ \Comment{Store calculation in array} \\
+	\hskip\algorithmicindent  \Return $1 + \mathrm{min}$
+\EndFunction
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Inductive Proof of Correctness}
+\label{sec:correctness}
+We use induction to prove the correctness of our recurrence relation and base cases. The correctness of the recursive and iterative approaches follow immediately from the correctness of the recurrence and base cases because they are direct translations. Here is what an inductive proof of correctness would look like in the Coin Problem.
+
+\[
+    \mathrm{NumCoins}(i) = 
+\begin{cases}
+    \mathrm{min_\substack{1 \leq j \leq k, \\ i \geq c_j}}\{ 1+ \mathrm{NumCoins}(i - c_j) \},& \text{if } i\geq 1\\
+    0,              & \text{if } i=0
+\end{cases}
+\]
+
+\textbf{Base case: $i = 0$.} $\mathrm{NumCoins}(i)$ returns 0 in this case, which is correct because it takes 0 coins to sum to a target value of 0.
+
+\textbf{Inductive hypothesis: $0 \leq i \leq k$.} We assume $\mathrm{NumCoins}(i)$ is correct, meaning that it returns the minimum number of coins needed to sum to $i$.
+
+\textbf{Inductive step: $i = k + 1$.} We are not in the base case, so we know that summing to $i = k+1$ will require at least one coin. Our recurrence considers all possible choices for this one coin $c_j$. By the IH, the call to $\mathrm{NumCoins}(i - c_j)$ correctly computes the minimum number of coins needed to sum to $i - c_j$. Note that we can apply the inductive hypothesis because we have a call to $i' = i - c_j$ where $0 \leq i' \leq k$. This is true because $c_j > 0$, so $i - c_j < k+1 $ and we know from the constraints in the recurrence that $i \geq c_j$, so $i - c_j \geq 0$. So, for a given value of $c_j$, we know that $1+ \mathrm{NumCoins}(i - c_j)$ properly computes the minimum value of coins necessary to sum to $i$ assuming that there is at least one coin of value $c_j$ used. Since we know that summing to $i$ will require at least one coin, by taking the minimum (over all values of $c_j$ that aren't themselves larger than the target sum) of the optimal answers assuming the fixed coin is $c_j$, our recurrence correctly calculates the minimum number of coins needed to sum to $i = k+1$ with no constraints on the ``first'' coin.
+
+By induction, our recurrence relation and base cases are correct for all target values $i \geq 0$.
 
 \end{document}
 
