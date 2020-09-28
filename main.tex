@@ -194,6 +194,8 @@ The time complexity for an iterative implementation can be calculated as (size o
 
 The space complexity is the size of the array, which may include space to store extra information for retrieving the solution path. In the Coin Problem, the array is size $T+1$ (or $2(T+1)$ depending on how we implement the retrieval step), so the space complexity is $\bigO(T)$.
 
+Note that we can sometimes reduce the space complexity by only keeping the part of the array necessary to fill in the remaining cells. In the Coin Problem, we look back a maximum of $\mathrm{max}(C)$ cells where $\mathrm{max}(C)$ is the largest coin value in $C$, the set of coins from the problem statement. So, as we fill in the array, we only need to keep $\mathrm{max}(C)$ cells (rather than our original ($T+1$) requirement). Depending on the coin denominations and value of $T$ in a particular problem instance, this could save significant space. Our space complexity drops to $\bigO(\mathrm{max}(C))$.
+
 \setcounter{section}{1}
 \renewcommand{\thesection}{\Alph{section}}
 \section*{Appendix}
